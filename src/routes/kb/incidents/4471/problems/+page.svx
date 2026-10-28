@@ -23,11 +23,14 @@ signature: SzymonGo with Claude Code
 </script>
 
 [#4471](/kb/incidents/4471) holds <ProblemCount ticket={4471} /> reports and says they are one bug with
-one fix queued. They are three bugs. The queued parser fix closes the biggest one and leaves the
-other two open, and their reporters will keep landing in a ticket marked known.
+one fix queued. They are three bugs. Engineering closed #4471 on 5 October with two outcomes: the
+parser is fixed and booking-v3 is retired. That ends two of the problems. The third, bookings that
+move by one day, is still open: neither outcome touches it.
 
 <Callout kind="warn">
-Not one issue. Each problem below has its own ticket, its own fix and its own count.
+
+#4471 is closed, but not everything in it is fixed. The one-day move is still open in [#3]({moveIssue}).
+
 </Callout>
 
 ## The three problems
@@ -40,14 +43,14 @@ Reports: <ProblemCount ticket={4471} problem="parser" />, counted the desk's way
 one-day moves below are in here too. Every tenant in #4471 writes the day first,
 and the parser reads every date month first, so 7 April goes out as 4 July. These come in by app,
 by email, and through booking-v2's form, whose hint already says `DD/MM/YYYY`.
-The fix #4471 has queued is for this one. Tracked in [#1]({parserIssue}).
+Fixed with `fix(dates): parse dd/mm for eu locales`; [#1]({parserIssue}) is closed.
 
 ### `hint`: booking-v3 tells people to type the month first
 
 Reports: <ProblemCount ticket={4471} problem="hint" />, all through the form of the three tenants on
 booking-v3. Its date field prints `MM/DD/YYYY`; people follow it, and the form reads the date the
 tenant's way, day first. The result looks the same as `parser`, a month flipped, but the parser fix
-does not touch it: the hint has to change. Tracked in [#2]({hintIssue}).
+does not touch it. Won't fix: booking-v3 is retired, and its hint goes with it; [#2]({hintIssue}) is closed.
 
 ### `one-day-move`: bookings slip by a day
 
@@ -56,7 +59,7 @@ by one day: Tuesday in Lisbon and Monday in Toronto for the same meeting, an inv
 the booking, a tenant who sees it only in June. That points at time zones, not date order. The desk
 read these as a one-day move (`desk-notes.json`) and files them under `parser` by tenant, so they
 count in both places; the parser fix will not close them. One reporter
-says they have stopped reporting these, so the count is a floor. Tracked in [#3]({moveIssue}).
+says they have stopped reporting these, so the count is a floor. Still open in [#3]({moveIssue}).
 
 ## Why one ticket hid three
 
@@ -69,9 +72,17 @@ For comparison, the existing cause table, built from the same data:
 
 <CauseTable ticket={4471} />
 
-## What changes
+## Where it stands
 
-- #4471 closes when the parser fix ships; [#2]({hintIssue}) and [#3]({moveIssue}) stay open after it.
+Engineering's update on #4471, 5 October:
+
+| problem | outcome | ticket |
+|---|---|---|
+| `parser` | fixed: `fix(dates): parse dd/mm for eu locales` | [#1]({parserIssue}), closed as completed |
+| `hint` | won't fix: booking-v3 form retired | [#2]({hintIssue}), closed as not planned |
+| `one-day-move` | nothing shipped | [#3]({moveIssue}), **open** |
+
+- A new report of a booking one day off belongs in [#3]({moveIssue}), not in a closed #4471.
 - Count from `src/lib/kb/problems.ts`, not by hand: every number on this page is computed at render
   time from the export the desk ships, so a new export updates it.
 - Decision 0001 is accepted and stays as written. Splitting by cause on merge needs a new record that
