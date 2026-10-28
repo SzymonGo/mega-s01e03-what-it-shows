@@ -1,0 +1,78 @@
+---
+layout: runbook
+title: '#4471 · three problems, not one'
+owner: SzymonGo
+status: open
+reviewed: 2026-10-28
+signature: SzymonGo with Claude Code
+---
+
+<script>
+  import ProblemTable from '#lib/kb/ProblemTable.svelte';
+  import ProblemCount from '#lib/kb/ProblemCount.svelte';
+  import CauseTable from '#lib/kb/CauseTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+
+  const issues = {
+    parser: 'https://github.com/SzymonGo/mega-s01e03-what-it-shows/issues/1',
+    hint: 'https://github.com/SzymonGo/mega-s01e03-what-it-shows/issues/2',
+    'one-day-move': 'https://github.com/SzymonGo/mega-s01e03-what-it-shows/issues/3',
+  };
+  const { parser: parserIssue, hint: hintIssue, 'one-day-move': moveIssue } = issues;
+</script>
+
+[#4471](/kb/incidents/4471) holds <ProblemCount ticket={4471} /> reports and says they are one bug with
+one fix queued. They are three bugs. The queued parser fix closes the biggest one and leaves the
+other two open, and their reporters will keep landing in a ticket marked known.
+
+<Callout kind="warn">
+Not one issue. Each problem below has its own ticket, its own fix and its own count.
+</Callout>
+
+## The three problems
+
+<ProblemTable ticket={4471} {issues} />
+
+### `parser`: the shared parser reads the month first
+
+Reports: <ProblemCount ticket={4471} problem="parser" />. Every tenant in #4471 writes the day first,
+and the parser reads every date month first, so 7 April goes out as 4 July. These come in by app,
+by email, and through booking-v2's form, whose hint already says `DD/MM/YYYY`.
+The fix #4471 has queued is for this one. Tracked in [#1]({parserIssue}).
+
+### `hint`: booking-v3 tells people to type the month first
+
+Reports: <ProblemCount ticket={4471} problem="hint" />, all through the form of the three tenants on
+booking-v3. Its date field prints `MM/DD/YYYY`; people follow it, and the form reads the date the
+tenant's way, day first. The result looks the same as `parser`, a month flipped, but the parser fix
+does not touch it: the hint has to change. Tracked in [#2]({hintIssue}).
+
+### `one-day-move`: bookings slip by a day
+
+Reports: <ProblemCount ticket={4471} problem="one-day-move" />, and nothing flipped in them. The booking moved
+by one day: Tuesday in Lisbon and Monday in Toronto for the same meeting, an invite that arrived before
+the booking, a tenant who sees it only in June. That points at time zones, not date order. The desk
+noticed these (`desk-notes.json`) but the cause table still files them under `parser`. One reporter
+says they have stopped reporting these, so the count is a floor. Tracked in [#3]({moveIssue}).
+
+## Why one ticket hid three
+
+The desk merges on subject line ([decision 0001](/kb/decisions/0001-dedupe-by-subject)). All three
+problems arrive as "wrong day on the invite", so subject matching put them together. The cause depends
+on the tenant and the way in (`causes.ts`), and the subject says neither. Intake's tag guesses from the
+reporter's browser and disagrees with the tenant rule too; the table above shows both.
+
+For comparison, the existing cause table, built from the same data:
+
+<CauseTable ticket={4471} />
+
+## What changes
+
+- #4471 closes when the parser fix ships; [#2]({hintIssue}) and [#3]({moveIssue}) stay open after it.
+- Count from `src/lib/kb/problems.ts`, not by hand: every number on this page is computed at render
+  time from the export the desk ships, so a new export updates it.
+- Decision 0001 is accepted and stays as written. Splitting by cause on merge needs a new record that
+  replaces it.
+
+<RenderStamp {signature} />
