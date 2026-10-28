@@ -36,7 +36,8 @@ Not one issue. Each problem below has its own ticket, its own fix and its own co
 
 ### `parser`: the shared parser reads the month first
 
-Reports: <ProblemCount ticket={4471} problem="parser" />. Every tenant in #4471 writes the day first,
+Reports: <ProblemCount ticket={4471} problem="parser" />, counted the desk's way: by tenant, so the
+one-day moves below are in here too. Every tenant in #4471 writes the day first,
 and the parser reads every date month first, so 7 April goes out as 4 July. These come in by app,
 by email, and through booking-v2's form, whose hint already says `DD/MM/YYYY`.
 The fix #4471 has queued is for this one. Tracked in [#1]({parserIssue}).
@@ -53,7 +54,8 @@ does not touch it: the hint has to change. Tracked in [#2]({hintIssue}).
 Reports: <ProblemCount ticket={4471} problem="one-day-move" />, and nothing flipped in them. The booking moved
 by one day: Tuesday in Lisbon and Monday in Toronto for the same meeting, an invite that arrived before
 the booking, a tenant who sees it only in June. That points at time zones, not date order. The desk
-noticed these (`desk-notes.json`) but the cause table still files them under `parser`. One reporter
+read these as a one-day move (`desk-notes.json`) and files them under `parser` by tenant, so they
+count in both places; the parser fix will not close them. One reporter
 says they have stopped reporting these, so the count is a floor. Tracked in [#3]({moveIssue}).
 
 ## Why one ticket hid three

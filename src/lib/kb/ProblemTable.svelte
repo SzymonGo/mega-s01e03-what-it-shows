@@ -5,7 +5,9 @@
   let { ticket, issues = {} }: { ticket: number; issues?: Partial<Record<Problem, string>> } = $props();
 
   const p = $derived(problemsOf(ticket));
-  const total = $derived(p.groups.reduce((n, g) => n + g.reports.length, 0));
+  // Distinct reports across the groups: a report filed under its cause and read as a one-day move counts once here.
+  const placed = $derived(new Set(p.groups.flatMap((g) => g.reports.map((r) => r.id))).size);
+  const overlaps = $derived(p.groups.filter((g) => g.alsoIn.length));
   const list = (counts: Record<string, number>) =>
     Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
@@ -41,8 +43,11 @@
   </tbody>
 </table>
 
-<p class="note" class:off={total !== p.merged.length}>
-  {total} of {p.merged.length} reports placed{total === p.merged.length ? ', none left over' : ' — check the export'}.
+<p class="note" class:off={placed !== p.merged.length}>
+  {placed} of {p.merged.length} reports placed{placed === p.merged.length ? ', none left over' : ' — check the export'}.
+  {#each overlaps as g (g.problem)}
+    The {g.reports.length} <code>{g.problem}</code> reports are counted under <code>{g.alsoIn.join(', ')}</code> too, where the desk files them.
+  {/each}
   {#if p.repeated}The export lists {p.repeated} of them twice; each counts once, by id.{/if}
 </p>
 
